@@ -356,7 +356,7 @@ const handleDeleteMessage = async () => {
 
       // Show a success message to the user
       toast({
-        title: "Message Deleted",
+        title: "Cue Deleted",
         status: "success",
         duration: 5000,
         isClosable: true,
@@ -381,6 +381,23 @@ const handleDeleteMessage = async () => {
 
   setSelectedCue(null); // Reset the selected message I
 };
+
+   const handleCopyMessageId = () => {
+     const textarea = document.createElement("textarea");
+     textarea.value = selectedCue;
+     document.body.appendChild(textarea);
+     textarea.select();
+     document.execCommand("copy");
+     document.body.removeChild(textarea);
+     setSelectedCue(null);
+     toast({
+       title: "Cue ID copied",
+       status: "success",
+       duration: 5000,
+       isClosable: true,
+       position: "bottom",
+     });
+   };
 
   return (
     <>
@@ -588,6 +605,8 @@ const handleDeleteMessage = async () => {
         onClose={() => setShowModal(false)}
         onUpdateStatus={handleUpdateStatus}
         onDeleteCue={handleDeleteMessage}
+        onCopyCueId={handleCopyMessageId}
+        selectedCue={selectedCue}
       />
     </>
   );

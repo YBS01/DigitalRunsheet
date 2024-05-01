@@ -106,7 +106,7 @@ socket.on("delete message", async (messageId) => {
 
     socket.broadcast.emit("message deleted", messageId);
 
-    console.log(`Message with ID ${messageId} marked as deleted`);
+    console.log(`Message with ID ${messageId} deleted`);
   } catch (error) {
     console.error("Error notifying message deletion:", error);
   }

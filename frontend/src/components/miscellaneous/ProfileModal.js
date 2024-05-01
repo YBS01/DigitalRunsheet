@@ -12,10 +12,17 @@ import {
   IconButton,
   Text,
   Image,
+  ButtonGroup,
 } from "@chakra-ui/react";
 
 const ProfileModal = ({ user, children }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const handleCopyMessageId = () => {
+    const textArea = document.getElementById("messageCopy");
+    textArea.select();
+    document.execCommand("copy");
+  };
 
   return (
     <>
@@ -36,6 +43,24 @@ const ProfileModal = ({ user, children }) => {
             {user.name}
           </ModalHeader>
           <ModalCloseButton />
+          <div
+            className="message-id-box"
+            style={{ padding: "0px 20px", height: "fit-content" }}
+          >
+            <p>Token:</p>
+            <textarea
+              id="messageCopy"
+              readOnly
+              style={{
+                width: "100%",
+                marginBottom: "0px",
+                height: "1.3em",
+                resize: "none",
+              }}
+            >
+              {user.token}
+            </textarea>
+          </div>
           <ModalBody
             d="flex"
             flexDir="column"
@@ -52,11 +77,14 @@ const ProfileModal = ({ user, children }) => {
               fontSize={{ base: "28px", md: "30px" }}
               fontFamily="Work sans"
             >
-              Email: {user.email}
+              Email:{user.email}
             </Text>
           </ModalBody>
-          <ModalFooter>
-            <Button onClick={onClose}>Close</Button>
+          <ModalFooter padding="10px">
+            <ButtonGroup>
+              <Button colorScheme="cyan" onClick={handleCopyMessageId}>Copy Token</Button>
+              <Button onClick={onClose}>Close</Button>
+            </ButtonGroup>
           </ModalFooter>
         </ModalContent>
       </Modal>

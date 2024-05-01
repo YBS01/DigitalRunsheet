@@ -11,7 +11,7 @@ import {
   ButtonGroup,
 } from '@chakra-ui/react';
 
-const CueChangeModal = ({ isOpen, onClose, onUpdateStatus, onDeleteCue }) => {
+const CueChangeModal = ({ isOpen, onClose, onUpdateStatus, onDeleteCue, onCopyCueId, selectedCue }) => {
   const handleStatusUpdate = (status) => {
     onUpdateStatus(status);
     onClose();
@@ -21,6 +21,34 @@ const CueChangeModal = ({ isOpen, onClose, onUpdateStatus, onDeleteCue }) => {
     onDeleteCue();
     onClose();
   };
+
+const handleCopyCueId = () => {
+    onCopyCueId();
+    onClose();
+  };
+
+     const handleCopyMessageId = () => {
+      const textArea = document.getElementById('messageCopy')
+      textArea.select();
+      document.execCommand('copy');
+       
+      
+      // const textarea = document.createElement("textarea");
+      //  textarea.value = selectedCue;
+      //  document.body.appendChild(textarea);
+      //  textarea.select();
+      //  document.execCommand("copy");
+      //  document.body.removeChild(textarea);
+       
+      //  setSelectedCue(null);
+      //  toast({
+      //    title: "Cue ID copied",
+      //    status: "success",
+      //    duration: 5000,
+      //    isClosable: true,
+      //    position: "bottom",
+      //  });
+     };
 
 
   
@@ -112,12 +140,20 @@ const CueChangeModal = ({ isOpen, onClose, onUpdateStatus, onDeleteCue }) => {
               Pending
             </Button>
           </ButtonGroup>
+          <div className="message-id-box" style={{ marginTop: "20px" }}>
+            <p>Cue ID:</p>
+            <textarea id="messageCopy" readOnly style={{ width: "100%", marginBottom: "0px", height: "fit-content", resize: "none" }} >{selectedCue}</textarea>
+          </div>
+            <Button colorScheme="cyan" onClick={handleCopyMessageId}>Copy ID</Button>
+        </ModalBody>
+        <ModalFooter>
+          <ButtonGroup>
           <Button colorScheme="red" onClick={() => handleMessageDelete()}>
             Delete Cue
           </Button>
-        </ModalBody>
-        <ModalFooter>
           <Button onClick={onClose}>Cancel</Button>
+            
+          </ButtonGroup>
         </ModalFooter>
       </ModalContent>
     </Modal>

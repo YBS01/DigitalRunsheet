@@ -158,6 +158,17 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     }, timerLength);
   };
 
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    const items = JSON.parse(localStorage.getItem("items"));
+    if (items) {
+      setItems(items);
+    }
+    console.log("ehyyyyyy", items);
+  }, []);
+
+
   return (
     <>
       {selectedChat ? (

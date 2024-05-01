@@ -56,7 +56,11 @@ function SideDrawer() {
     history.push("/");
   };
 
+
+
   const handleSearch = async () => {
+    const token = user.token;
+    console.log(token);
     if (!search) {
       toast({
         title: "Please Enter something in search",
