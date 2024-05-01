@@ -9,7 +9,8 @@ const {
   updateCategory,
   updateLocation,
   updateNotes,
-  getMessageStatus
+  getMessageStatus,
+  deleteMessage,
 } = require("../controllers/messageControllers");
 const { protect } = require("../middleware/authMiddleware");
 
@@ -53,5 +54,7 @@ router.route("/:messageId/notes/:notes").put(protect, (req, res) => {
 
 
 router.route("/:messageId/status").get(protect, getMessageStatus)
+
+router.delete("/:messageId", protect, deleteMessage);
 
 module.exports = router;

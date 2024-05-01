@@ -289,6 +289,33 @@ const getMessageStatus = asyncHandler(async (req, res) => {
   res.json({ status: message.status });
 });
 
+const deleteMessage = asyncHandler(async (req, res) => {
+  const messageId = req.params.messageId;
+
+  try {
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+
+    // Check if the user has permission to delete the message (optional)
+
+    await message.remove();
+
+    // Emit the socket event to notify other clients about the deletion
+    // if (io) {
+    //   io.emit("message deleted", messageId);
+    // }
+
+    res.json({ message: "Message deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting message:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 
-module.exports = { allMessages, sendMessage, updateMessageStatus, updateItemNum, updateEstTime, updateContent, updateCategory, updateLocation, updateNotes, getMessageStatus };
+
+
+module.exports = { allMessages, sendMessage, updateMessageStatus, updateItemNum, updateEstTime, updateContent, updateCategory, updateLocation, updateNotes, getMessageStatus, deleteMessage };

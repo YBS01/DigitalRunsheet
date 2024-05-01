@@ -6,6 +6,7 @@ const chatRoutes = require("./routes/chatRoutes");
 const messageRoutes = require("./routes/messageRoutes");  
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 const path = require("path");
+const Message = require("./models/messageModel");
 
 const cueRoutes = require("./routes/cueRoutes");
 const sheetRoutes = require("./routes/sheetRoutes");
@@ -98,6 +99,20 @@ io.on("connection", (socket) => {
       socket.in(user._id).emit("message recieved", newMessageRecieved);
     });
   });
+
+
+socket.on("delete message", async (messageId) => {
+  try {
+
+    socket.broadcast.emit("message deleted", messageId);
+
+    console.log(`Message with ID ${messageId} marked as deleted`);
+  } catch (error) {
+    console.error("Error notifying message deletion:", error);
+  }
+});
+
+
 
 
   

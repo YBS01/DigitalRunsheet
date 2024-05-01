@@ -11,11 +11,19 @@ import {
   ButtonGroup,
 } from '@chakra-ui/react';
 
-const CueChangeModal = ({ isOpen, onClose, onUpdateStatus }) => {
+const CueChangeModal = ({ isOpen, onClose, onUpdateStatus, onDeleteCue }) => {
   const handleStatusUpdate = (status) => {
     onUpdateStatus(status);
     onClose();
   };
+
+  const handleMessageDelete = () => {
+    onDeleteCue();
+    onClose();
+  };
+
+
+  
 
 // const handleStatusUpdate = async () => {
 //     try {
@@ -79,19 +87,34 @@ const CueChangeModal = ({ isOpen, onClose, onUpdateStatus }) => {
         <ModalCloseButton />
         <ModalBody>
           <ButtonGroup variant="outline" spacing="4">
-            <Button colorScheme="red" onClick={() => handleStatusUpdate('live')}>
+            <Button
+              colorScheme="red"
+              onClick={() => handleStatusUpdate("live")}
+            >
               Live
             </Button>
-            <Button colorScheme="orange" onClick={() => handleStatusUpdate('standby')}>
+            <Button
+              colorScheme="orange"
+              onClick={() => handleStatusUpdate("standby")}
+            >
               Standby
             </Button>
-            <Button colorScheme="green" onClick={() => handleStatusUpdate('completed')}>
+            <Button
+              colorScheme="green"
+              onClick={() => handleStatusUpdate("completed")}
+            >
               Completed
             </Button>
-            <Button colorScheme="blue" onClick={() => handleStatusUpdate('pending')}>
+            <Button
+              colorScheme="blue"
+              onClick={() => handleStatusUpdate("pending")}
+            >
               Pending
             </Button>
           </ButtonGroup>
+          <Button colorScheme="red" onClick={() => handleMessageDelete()}>
+            Delete Cue
+          </Button>
         </ModalBody>
         <ModalFooter>
           <Button onClick={onClose}>Cancel</Button>

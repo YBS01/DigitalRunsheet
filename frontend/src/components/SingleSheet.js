@@ -1,5 +1,21 @@
-import { Box, Text, Table, Tbody, Tr, Td, Th, Thead, TableContainer, Spinner, FormControl, Input, IconButton, useToast } from "@chakra-ui/react";
-import './styles.css';
+import {
+  Box,
+  Text,
+  Table,
+  Tbody,
+  Tr,
+  Td,
+  Th,
+  Thead,
+  TableContainer,
+  Spinner,
+  FormControl,
+  Input,
+  IconButton,
+  useToast,
+  Button,
+} from "@chakra-ui/react";
+import "./styles.css";
 import { getSender, getSenderFull } from "../config/ChatLogics";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -30,15 +46,14 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
   const [newEstTime, setNewEstTime] = useState("");
   const [newNotes, setNewNotes] = useState("");
 
-
   const [socketConnected, setSocketConnected] = useState(false);
   const [typing, setTyping] = useState(false);
   const [istyping, setIsTyping] = useState(false);
   const toast = useToast();
-  
+
   const [showModal, setShowModal] = useState(false); // State to control modal visibility
   const [selectedCue, setSelectedCue] = useState(null); // State to store selected cue
-  
+
   const defaultOptions = {
     loop: true,
     autoplay: true,
@@ -47,10 +62,9 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
       preserveAspectRatio: "xMidYMid slice",
     },
   };
-  
-  
-    const { selectedChat, setSelectedChat, user, notification, setNotification } = ChatState();
 
+  const { selectedChat, setSelectedChat, user, notification, setNotification } =
+    ChatState();
 
   const fetchMessages = async () => {
     if (!selectedChat) return;
@@ -61,13 +75,13 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
           Authorization: `Bearer ${user.token}`,
         },
       };
-      
+
       setLoading(true);
 
       const { data } = await axios.get(
         `/api/message/${selectedChat._id}`,
-         config
-         );
+        config
+      );
       setMessages(data);
       setLoading(false);
 
@@ -82,7 +96,6 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
         isClosable: true,
         position: "bottom",
       });
-    
     }
   };
 
@@ -125,29 +138,33 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
     }
   };
 
-  useEffect(() => {
-    socket = io(ENDPOINT);
-    socket.emit("setup", user);
-    socket.on("connected", () => setSocketConnected(true));
-    socket.on("typing", () => setIsTyping(true));
-    socket.on("stop typing", () => setIsTyping(false));
+  useEffect(
+    () => {
+      socket = io(ENDPOINT);
+      socket.emit("setup", user);
+      socket.on("connected", () => setSocketConnected(true));
+      socket.on("typing", () => setIsTyping(true));
+      socket.on("stop typing", () => setIsTyping(false));
 
-    // return () => {
-    //   socket.disconnect(); // Clean up socket connection on component unmount
-    // };
-  }, [/*user*/]);
+      // return () => {
+      //   socket.disconnect(); // Clean up socket connection on component unmount
+      // };
+    },
+    [
+      /*user*/
+    ]
+  );
 
   // useEffect(() => {
   //   fetchMessages();
   // }, [selectedChat, fetchAgain]);
 
-    useEffect(() => {
+  useEffect(() => {
     fetchMessages();
 
     selectedChatCompare = selectedChat;
     // eslint-disable-next-line
   }, [selectedChat]);
-
 
   // useEffect(() => {
   //   socket.on("message received", (newMessageReceived) => {
@@ -155,7 +172,7 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
   //   });
   // });
 
-    useEffect(() => {
+  useEffect(() => {
     socket.on("message recieved", (newMessageRecieved) => {
       if (
         !selectedChatCompare || // if chat is not selected or doesn't match current chat
@@ -170,90 +187,135 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
       }
     });
   }, [messages]);
-  
-  
-    const typingHandler = (e) => {
-      
-      setNewMessage(e.target.value);
-  
-      if (!socketConnected) return;
-  
-      if (!istyping) {
-        setIsTyping(true);
-        socket.emit("typing", selectedChat._id);
+
+  useEffect (() => {
+    socket.on("message deleted", (messageId) => {
+      setMessages(messages.filter((message) => message._id !== messageId));
+      setFetchAgain(!fetchAgain);
+    })
+    })
+
+  const typingHandler = (e) => {
+    setNewMessage(e.target.value);
+
+    if (!socketConnected) return;
+
+    if (!istyping) {
+      setIsTyping(true);
+      socket.emit("typing", selectedChat._id);
+    }
+    let lastTypingTime = new Date().getTime();
+    var timerLength = 3000;
+    setTimeout(() => {
+      var timeNow = new Date().getTime();
+      var timeDiff = timeNow - lastTypingTime;
+      if (timeDiff >= timerLength && istyping) {
+        socket.emit("stop typing", selectedChat._id);
+        setIsTyping(false);
       }
-      let lastTypingTime = new Date().getTime();
-      var timerLength = 3000;
-      setTimeout(() => {
-        var timeNow = new Date().getTime();
-        var timeDiff = timeNow - lastTypingTime;
-        if (timeDiff >= timerLength && istyping) {
-          socket.emit("stop typing", selectedChat._id);
-          setIsTyping(false);
-        }
-      }, timerLength);
-    };
-  
-    
+    }, timerLength);
+  };
 
-  
- // Inside useEffect hook to handle the socket event
-useEffect(() => {
-  socket.on("cue status update", ({ messageId, status }) => {
-    // Find the message by ID and update its status
-    setMessages(messages.map(message => {
-      if (message._id === messageId) {
-        return { ...message, status };
+  const addCue = async (e) => {
+    {
+      socket.emit("stop typing", selectedChat._id);
+      try {
+        const config = {
+          headers: {
+            "Content-type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+        };
+        setNewMessage("");
+        const { data } = await axios.post(
+          "/api/message",
+          {
+            itemNum: newItemNum,
+            estTime: newEstTime,
+            content: newMessage,
+            category: newCategory,
+            location: newLocation,
+            notes: newNotes,
+            chatId: selectedChat,
+          },
+          config
+        );
+        socket.emit("new message", data);
+        setMessages([...messages, data]);
+      } catch (error) {
+        toast({
+          title: "Error Occured!",
+          description: "Failed to send the Message",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+          position: "bottom",
+        });
       }
-      return message;
-    }));
-  });
-}, [messages]); // Make sure to include 'messages' in the dependency array
+    }
+  };
 
+  // Inside useEffect hook to handle the socket event
+  useEffect(() => {
+    socket.on("cue status update", ({ messageId, status }) => {
+      // Find the message by ID and update its status
+      setMessages(
+        messages.map((message) => {
+          if (message._id === messageId) {
+            return { ...message, status };
+          }
+          return message;
+        })
+      );
+    });
+  }, [messages]); // Make sure to include 'messages' in the dependency array
 
-const handleCueClick = (message) => {
+  const handleCueClick = (message) => {
     setSelectedCue(message._id); // Set the selected message ID
     setShowModal(true); // Open the modal
   };
 
+  const handleUpdateStatus = async (status) => {
+    console.log("Updating cue status:", status);
+    console.log("Updating message:", selectedCue);
 
-const handleUpdateStatus = async (status) => {
-  console.log("Updating cue status:", status);
-  console.log("Updating message:", selectedCue);
-
-  if (!selectedCue) {
-    console.error("No cue selected");
-    return;
-  }
-
-  try {
-    const response = await fetch(`/api/message/${selectedCue}/status/${status}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${user.token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to update message status: ${response.status}`);
+    if (!selectedCue) {
+      console.error("No cue selected");
+      return;
     }
 
-    const updatedMessage = await response.json();
-    console.log('Message status updated:', updatedMessage); 
-    
+    try {
+      const response = await fetch(
+        `/api/message/${selectedCue}/status/${status}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-    // Emit a socket event to notify other clients about the status change
-    socket.emit("cue status update", { messageId: selectedCue, status })
-    // Emit cue status update event to the server
-    // console.log(`Cue status update emitted: Message ID ${messageId}, Status ${status}`);
-    console.log(`cue status update emitted: Message ID`, {messageId: selectedCue}, `Status` , {status});
+      if (!response.ok) {
+        throw new Error(`Failed to update message status: ${response.status}`);
+      }
 
-    
-    
+      const updatedMessage = await response.json();
+      console.log("Message status updated:", updatedMessage);
+
+      // Emit a socket event to notify other clients about the status change
+      socket.emit("cue status update", { messageId: selectedCue, status });
+      // Emit cue status update event to the server
+      // console.log(`Cue status update emitted: Message ID ${messageId}, Status ${status}`);
+      console.log(
+        `cue status update emitted: Message ID`,
+        { messageId: selectedCue },
+        `Status`,
+        { status }
+      );
 
       // Optionally, you can also update the local state immediately for better user experience
-      const updatedMessages = messages.map(message => {
+      const updatedMessages = messages.map((message) => {
         if (message._id === selectedCue) {
           return { ...message, status };
         }
@@ -261,85 +323,175 @@ const handleUpdateStatus = async (status) => {
       });
       setMessages(updatedMessages);
     } catch (error) {
-      console.error('Error updating message status:', error);
+      console.error("Error updating message status:", error);
     }
 
     setSelectedCue(null); // Reset the selected message ID
+  };
+
+const handleDeleteMessage = async () => {
+  console.log("Deleting message:", selectedCue);
+
+  if (!selectedCue) {
+    console.error("No cue selected");
+    return;
+  }
+
+  try {
+    const config = {
+      headers: {
+        Authorization: `Bearer ${user.token}`,
+      },
+    };
+
+    socket.emit("delete message", selectedCue);
+    const response = await axios.delete(`/api/message/${selectedCue}`, config);
+
+    if (response.status === 200) {
+      // Remove the deleted message from the local state or update it accordingly
+      // For example, if 'messages' is an array of messages, you can filter out the deleted message
+      setMessages(messages.filter((message) => message._id !== selectedCue));
+
+      // Emit a socket event to notify other clients about the deletion
+
+      // Show a success message to the user
+      toast({
+        title: "Message Deleted",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+    } else {
+      throw new Error(`Failed to delete message: ${response.status}`);
+    }
+  } catch (error) {
+    console.error("Error deleting message:", error);
+
+    // Show an error message to the user
+    toast({
+      title: "Error Occurred!",
+      description: "Failed to delete the message",
+      status: "error",
+      duration: 5000,
+      isClosable: true,
+      position: "bottom",
+    });
+  }
+
+  setSelectedCue(null); // Reset the selected message I
 };
-
-
-
-
 
   return (
     <>
       {selectedChat ? (
         <>
-          <Text fontSize={{ base: "28px", md: "30px" }} pb={3} px={2} w="100%" fontFamily="Work sans"
-            d="flex" justifyContent={{ base: "space-between" }} alignItems="center">
-            <IconButton d={{ base: "flex", md: "none" }} icon={<ArrowBackIcon />} onClick={() => setSelectedChat("")} />
-            {messages && (!selectedChat.isGroupChat ? (
-              <>
-                {getSender(user, selectedChat.users)}
-                <ProfileModal user={getSenderFull(user, selectedChat.users)} />
-              </>
-            ) : (
-              <>Runsheet:  
-                {selectedChat.chatName.toUpperCase()}
-                <UpdateGroupChatModal fetchMessages={fetchMessages} fetchAgain={fetchAgain} setFetchAgain={setFetchAgain} />
-              </>
-            ))}
+          <Text
+            fontSize={{ base: "28px", md: "30px" }}
+            pb={3}
+            px={2}
+            w="100%"
+            fontFamily="Work sans"
+            d="flex"
+            justifyContent={{ base: "space-between" }}
+            alignItems="center"
+          >
+            <IconButton
+              d={{ base: "flex", md: "none" }}
+              icon={<ArrowBackIcon />}
+              onClick={() => setSelectedChat("")}
+            />
+            {messages &&
+              (!selectedChat.isGroupChat ? (
+                <>
+                  {getSender(user, selectedChat.users)}
+                  <ProfileModal
+                    user={getSenderFull(user, selectedChat.users)}
+                  />
+                </>
+              ) : (
+                <>
+                  Runsheet:
+                  {selectedChat.chatName.toUpperCase()}
+                  <UpdateGroupChatModal
+                    fetchMessages={fetchMessages}
+                    fetchAgain={fetchAgain}
+                    setFetchAgain={setFetchAgain}
+                  />
+                </>
+              ))}
           </Text>
-          <Box d="flex" flexDir="column" justifyContent="flex-end" p={3} bg="#E8E8E8" w="100%" h="100%" borderRadius="lg" overflowY="hidden">
+          <Box
+            d="flex"
+            flexDir="column"
+            justifyContent="flex-end"
+            p={3}
+            bg="#E8E8E8"
+            w="100%"
+            h="100%"
+            borderRadius="lg"
+            overflowY="hidden"
+          >
             <Table>
-              
-                  <Thead>
-      <Tr>
-        <Th>#</Th>
-        <Th>Duration</Th>
-        <Th>Action</Th>
-        <Th>Category</Th>
-        <Th>Notes</Th>
-      </Tr>
-    </Thead>
+              <Thead>
+                <Tr>
+                  <Th>#</Th>
+                  <Th>Duration</Th>
+                  <Th>Action</Th>
+                  <Th>Category</Th>
+                  <Th>Notes</Th>
+                </Tr>
+              </Thead>
             </Table>
             {loading ? (
-              <Spinner size="xl" w={20} h={20} alignSelf="center" margin="auto" />
+              <Spinner
+                size="xl"
+                w={20}
+                h={20}
+                alignSelf="center"
+                margin="auto"
+              />
             ) : (
-              
               <Box overflowY="auto" flexGrow={1}>
                 <Table variant="simple">
                   <Thead>
-      <Tr>
-        <Th>#</Th>
-        <Th>Duration</Th>
-        <Th>Action</Th>
-        <Th>Category</Th>
-        <Th>Notes</Th>
-      </Tr>
-    </Thead>
+                    <Tr>
+                      <Th>#</Th>
+                      <Th>Duration</Th>
+                      <Th>Action</Th>
+                      <Th>Category</Th>
+                      <Th>Notes</Th>
+                    </Tr>
+                  </Thead>
                   <Tbody>
-                    
                     {/* Render cues as rows */}
                     {messages.map((message, index) => (
-                      <Tr key={index} onClick={() => handleCueClick(message)} style={{ cursor: "pointer", background: message.status === "live" ? "red" : (message.status === "standby" ? "orange" : (message.status === "completed" ? "gray" : "white") ) }}>
+                      <Tr
+                        key={index}
+                        onClick={() => handleCueClick(message)}
+                        style={{
+                          cursor: "pointer",
+                          background:
+                            message.status === "live"
+                              ? "red"
+                              : message.status === "standby"
+                              ? "orange"
+                              : message.status === "completed"
+                              ? "gray"
+                              : "white",
+                        }}
+                      >
                         {/* <Td>{message.sender.name}</Td> */}
                         <Td>{message.itemNum}</Td>
                         <Td>{message.estTime}</Td>
                         <Td>{message.content}</Td>
                         <Td>{message.category}</Td>
-                        <Td>{message.notes}</Td>        
-                        
-                        
+                        <Td>{message.notes}</Td>
+
                         {/* Add other message attributes as needed */}
                       </Tr>
-
-                      
-                      
                     ))}
-                    <Tr>
-                      
-                    </Tr>
+                    <Tr></Tr>
                   </Tbody>
                 </Table>
               </Box>
@@ -362,40 +514,83 @@ const handleUpdateStatus = async (status) => {
               ) : (
                 <></>
               )}
-              <Input variant="filled" bg="#E0E0E0" placeholder="Enter a message.." value={newMessage} onChange={typingHandler} />
+              <Input
+                variant="filled"
+                bg="#E0E0E0"
+                placeholder="Enter cue name.."
+                value={newMessage}
+                onChange={typingHandler}
+              />
               {/* // Input for updating itemNum */}
-              <Input variant="filled" bg="#E0E0E0" placeholder="Enter itemNum.." value={newItemNum} onChange={(e) => setNewItemNum(e.target.value)} />
-
+              <Input
+                variant="filled"
+                bg="#E0E0E0"
+                placeholder="Enter item number.."
+                value={newItemNum}
+                onChange={(e) => setNewItemNum(e.target.value)}
+              />
               {/* // Input for updating estTime */}
-              <Input variant="filled" bg="#E0E0E0" placeholder="Enter estTime.." value={newEstTime} onChange={(e) => setNewEstTime(e.target.value)} />
-
+              <Input
+                variant="filled"
+                bg="#E0E0E0"
+                placeholder="Enter Estimated Time.."
+                value={newEstTime}
+                onChange={(e) => setNewEstTime(e.target.value)}
+              />
+              {/* // Input for updating category */}
+              <Input
+                variant="filled"
+                bg="#E0E0E0"
+                placeholder="Enter category.."
+                value={newCategory}
+                onChange={(e) => setNewCategory(e.target.value)}
+              />
+              {/* // Input for updating location */}
+              <Input
+                variant="filled"
+                bg="#E0E0E0"
+                placeholder="Enter location.."
+                value={newLocation}
+                onChange={(e) => setNewLocation(e.target.value)}
+              />
+              {/* // Input for updating notes */}
+              <Input
+                variant="filled"
+                bg="#E0E0E0"
+                placeholder="Enter notes.."
+                value={newNotes}
+                onChange={(e) => setNewNotes(e.target.value)}
+              />
               {/* // Input for updating content
               <Input variant="filled" bg="#E0E0E0" placeholder="Enter content.." value={newContent} onChange={(e) => setNewContent(e.target.value)} /> */}
-
-              {/* // Input for updating category */}
-              <Input variant="filled" bg="#E0E0E0" placeholder="Enter category.." value={newCategory} onChange={(e) => setNewCategory(e.target.value)} />
-
-              {/* // Input for updating location */}
-              <Input variant="filled" bg="#E0E0E0" placeholder="Enter location.." value={newLocation} onChange={(e) => setNewLocation(e.target.value)} />
-
-              {/* // Input for updating notes */}
-              <Input variant="filled" bg="#E0E0E0" placeholder="Enter notes.." value={newNotes} onChange={(e) => setNewNotes(e.target.value)} />
-
+              <Button
+                colorScheme="blue"
+                mt={{ base: 3, md: 0 }}
+                ml={{ base: 0, md: 3 }}
+                onClick={addCue}
+              >
+                Add Cue
+              </Button>{" "}
+              {/* Add Cue button */}
             </FormControl>
           </Box>
         </>
       ) : (
         <Box d="flex" alignItems="center" justifyContent="center" h="100%">
           <Text fontSize="3xl" pb={3} fontFamily="Work sans">
-            Click on a sheet to
+            Click on a sheet to view cues
           </Text>
         </Box>
       )}
       {/* Render CueChangeModal */}
-      <CueChangeModal isOpen={showModal} onClose={() => setShowModal(false)} onUpdateStatus={handleUpdateStatus} />
+      <CueChangeModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onUpdateStatus={handleUpdateStatus}
+        onDeleteCue={handleDeleteMessage}
+      />
     </>
   );
 };
-
 
 export default SingleSheet;
