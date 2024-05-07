@@ -226,10 +226,11 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
             Authorization: `Bearer ${user.token}`,
           },
         };
-        setNewMessage("");
+        // setNewMessage("");
         const { data } = await axios.post(
           "/api/message",
           {
+            message: newMessage,
             itemNum: newItemNum,
             estTime: newEstTime,
             content: newMessage,
@@ -536,7 +537,8 @@ const handleDeleteMessage = async () => {
                 bg="#E0E0E0"
                 placeholder="Enter cue name.."
                 value={newMessage}
-                onChange={typingHandler}
+                // onChange={typingHandler}
+                onChange={(e) => setNewMessage(e.target.value)}
               />
               {/* // Input for updating itemNum */}
               <Input
