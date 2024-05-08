@@ -568,12 +568,19 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
                   // placeholder="Enter item number.."
                   // value={newItemNum}
                   // onChange={(e) => setNewItemNum(e.target.value)}
-                  max={999}
+                  // max={999}
                   width="500px"
                   // defaultValue={0}
                 >
                   <NumberInputField
-                  value={newItemNum}
+                    value={newItemNum}
+                    onChange={(e) => setNewItemNum(e.target.value)}
+                    onBlur={(e) => {
+                      const value = parseInt(e.target.value);
+                      if (!isNaN(value)) {
+                        setNewItemNum(value);
+                      }
+                    }}
                   />
                   <NumberInputStepper>
                     <NumberIncrementStepper />
