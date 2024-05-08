@@ -18,8 +18,9 @@
 "bin": "./backend/fontendServe.js"
 ,
   "keywords": [
-    "mern",
-    "chat-app"
+    "runsheet",
+    "run",
+    "sheet"
   ],
   "author": "Piyush Agarwal",
   "license": "ISC",

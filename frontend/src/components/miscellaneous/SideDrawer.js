@@ -158,7 +158,7 @@ function SideDrawer() {
               <BellIcon fontSize="2xl" m={1} color="white"/>
             </MenuButton>
             <MenuList pl={2}>
-              {!notification.length && "No New Messages"}
+              {!notification.length && "No Notifications"}
               {notification.map((notif) => (
                 <MenuItem
                   key={notif._id}
@@ -168,8 +168,8 @@ function SideDrawer() {
                   }}
                 >
                   {notif.chat.isGroupChat
-                    ? `New Message in ${notif.chat.chatName}`
-                    : `New Message from ${getSender(user, notif.chat.users)}`}
+                    ? `New Update in ${notif.chat.chatName}`
+                    : `Change made by ${getSender(user, notif.chat.users)}`}
                 </MenuItem>
               ))}
             </MenuList>
