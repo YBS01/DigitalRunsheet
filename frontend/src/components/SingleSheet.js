@@ -14,6 +14,14 @@ import {
   IconButton,
   useToast,
   Button,
+  Stack,
+} from "@chakra-ui/react";
+import {
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
 } from "@chakra-ui/react";
 import "./styles.css";
 import { getSender, getSenderFull } from "../config/ChatLogics";
@@ -39,7 +47,7 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
   const [loading, setLoading] = useState(false);
   const [newMessage, setNewMessage] = useState("");
 
-  const [newItemNum, setNewItemNum] = useState("");
+  const [newItemNum, setNewItemNum] = useState(0);
   const [newCategory, setNewCategory] = useState("");
   const [newContent, setNewContent] = useState("");
   const [newLocation, setNewLocation] = useState("");
@@ -188,12 +196,12 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
     });
   }, [messages]);
 
-  useEffect (() => {
+  useEffect(() => {
     socket.on("message deleted", (messageId) => {
       setMessages(messages.filter((message) => message._id !== messageId));
       setFetchAgain(!fetchAgain);
-    })
-    })
+    });
+  });
 
   const typingHandler = (e) => {
     setNewMessage(e.target.value);
@@ -217,42 +225,50 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
   };
 
   const addCue = async (e) => {
-    {
-      socket.emit("stop typing", selectedChat._id);
-      try {
-        const config = {
-          headers: {
-            "Content-type": "application/json",
-            Authorization: `Bearer ${user.token}`,
-          },
-        };
-        // setNewMessage("");
-        const { data } = await axios.post(
-          "/api/message",
-          {
-            message: newMessage,
-            itemNum: newItemNum,
-            estTime: newEstTime,
-            content: newMessage,
-            category: newCategory,
-            location: newLocation,
-            notes: newNotes,
-            chatId: selectedChat,
-          },
-          config
-        );
-        socket.emit("new message", data);
-        setMessages([...messages, data]);
-      } catch (error) {
-        toast({
-          title: "Error Occured!",
-          description: "Failed to send the Message",
-          status: "error",
-          duration: 5000,
-          isClosable: true,
-          position: "bottom",
-        });
-      }
+    e.preventDefault(); // Prevent the default form submission behavior
+
+    socket.emit("stop typing", selectedChat._id);
+    try {
+      const config = {
+        headers: {
+          "Content-type": "application/json",
+          Authorization: `Bearer ${user.token}`,
+        },
+      };
+
+      setNewMessage("");
+      setNewItemNum("");
+      setNewCategory("");
+      setNewLocation("");
+      setNewEstTime("");
+      setNewNotes("");
+
+      const { data } = await axios.post(
+        "/api/message",
+        {
+          // Pass the values of all the fields to the backend
+          itemNum: newItemNum,
+          estTime: newEstTime,
+          content: newMessage, // Assuming newMessage is the message content
+          category: newCategory,
+          location: newLocation,
+          notes: newNotes,
+          chatId: selectedChat,
+        },
+        config
+      );
+      socket.emit("new message", data);
+      setMessages([...messages, data]);
+      // Clear all the input fields after successfully adding the cue
+    } catch (error) {
+      toast({
+        title: "Error Occurred!",
+        description: "Failed to add the Cue",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
     }
   };
 
@@ -330,75 +346,78 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
     setSelectedCue(null); // Reset the selected message ID
   };
 
-const handleDeleteMessage = async () => {
-  console.log("Deleting message:", selectedCue);
+  const handleDeleteMessage = async () => {
+    console.log("Deleting message:", selectedCue);
 
-  if (!selectedCue) {
-    console.error("No cue selected");
-    return;
-  }
+    if (!selectedCue) {
+      console.error("No cue selected");
+      return;
+    }
 
-  try {
-    const config = {
-      headers: {
-        Authorization: `Bearer ${user.token}`,
-      },
-    };
+    try {
+      const config = {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      };
 
-    socket.emit("delete message", selectedCue);
-    const response = await axios.delete(`/api/message/${selectedCue}`, config);
+      socket.emit("delete message", selectedCue);
+      const response = await axios.delete(
+        `/api/message/${selectedCue}`,
+        config
+      );
 
-    if (response.status === 200) {
-      // Remove the deleted message from the local state or update it accordingly
-      // For example, if 'messages' is an array of messages, you can filter out the deleted message
-      setMessages(messages.filter((message) => message._id !== selectedCue));
+      if (response.status === 200) {
+        // Remove the deleted message from the local state or update it accordingly
+        // For example, if 'messages' is an array of messages, you can filter out the deleted message
+        setMessages(messages.filter((message) => message._id !== selectedCue));
 
-      // Emit a socket event to notify other clients about the deletion
+        // Emit a socket event to notify other clients about the deletion
 
-      // Show a success message to the user
+        // Show a success message to the user
+        toast({
+          title: "Cue Deleted",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+          position: "bottom",
+        });
+      } else {
+        throw new Error(`Failed to delete message: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Error deleting message:", error);
+
+      // Show an error message to the user
       toast({
-        title: "Cue Deleted",
-        status: "success",
+        title: "Error Occurred!",
+        description: "Failed to delete the message",
+        status: "error",
         duration: 5000,
         isClosable: true,
         position: "bottom",
       });
-    } else {
-      throw new Error(`Failed to delete message: ${response.status}`);
     }
-  } catch (error) {
-    console.error("Error deleting message:", error);
 
-    // Show an error message to the user
+    setSelectedCue(null); // Reset the selected message I
+  };
+
+  const handleCopyMessageId = () => {
+    const textarea = document.createElement("textarea");
+    textarea.value = selectedCue;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textarea);
+    setSelectedCue(null);
     toast({
-      title: "Error Occurred!",
-      description: "Failed to delete the message",
-      status: "error",
+      title: "Cue ID copied",
+      status: "success",
       duration: 5000,
       isClosable: true,
       position: "bottom",
     });
-  }
-
-  setSelectedCue(null); // Reset the selected message I
-};
-
-   const handleCopyMessageId = () => {
-     const textarea = document.createElement("textarea");
-     textarea.value = selectedCue;
-     document.body.appendChild(textarea);
-     textarea.select();
-     document.execCommand("copy");
-     document.body.removeChild(textarea);
-     setSelectedCue(null);
-     toast({
-       title: "Cue ID copied",
-       status: "success",
-       duration: 5000,
-       isClosable: true,
-       position: "bottom",
-     });
-   };
+  };
 
   return (
     <>
@@ -532,47 +551,69 @@ const handleDeleteMessage = async () => {
               ) : (
                 <></>
               )}
+              <Stack direction="row" spacing={4}>
+                {/* // Input for updating itemNum
               <Input
-                variant="filled"
-                bg="#E0E0E0"
-                placeholder="Enter cue name.."
-                value={newMessage}
-                // onChange={typingHandler}
-                onChange={(e) => setNewMessage(e.target.value)}
-              />
-              {/* // Input for updating itemNum */}
-              <Input
+                pattern="[0-9]*" // Allow only numbers
+                inputMode="numeric" // Show numeric keyboard on mobile devices
                 variant="filled"
                 bg="#E0E0E0"
                 placeholder="Enter item number.."
                 value={newItemNum}
                 onChange={(e) => setNewItemNum(e.target.value)}
-              />
-              {/* // Input for updating estTime */}
-              <Input
-                variant="filled"
-                bg="#E0E0E0"
-                placeholder="Enter Estimated Time.."
-                value={newEstTime}
-                onChange={(e) => setNewEstTime(e.target.value)}
-              />
-              {/* // Input for updating category */}
-              <Input
-                variant="filled"
-                bg="#E0E0E0"
-                placeholder="Enter category.."
-                value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value)}
-              />
-              {/* // Input for updating location */}
-              <Input
-                variant="filled"
-                bg="#E0E0E0"
-                placeholder="Enter location.."
-                value={newLocation}
-                onChange={(e) => setNewLocation(e.target.value)}
-              />
-              {/* // Input for updating notes */}
+              /> */}
+                <NumberInput
+                  // variant="filled"
+                  bg="#E0E0E0"
+                  // placeholder="Enter item number.."
+                  // value={newItemNum}
+                  // onChange={(e) => setNewItemNum(e.target.value)}
+                  max={999}
+                  width="500px"
+                  // defaultValue={0}
+                >
+                  <NumberInputField
+                  value={newItemNum}
+                  />
+                  <NumberInputStepper>
+                    <NumberIncrementStepper />
+                    <NumberDecrementStepper />
+                  </NumberInputStepper>
+                </NumberInput>
+                <Input
+                  variant="filled"
+                  bg="#E0E0E0"
+                  placeholder="Cue name.."
+                  value={newMessage}
+                  // onChange={typingHandler}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                />
+                {/* // Input for updating estTime */}
+                <Input
+                  variant="filled"
+                  bg="#E0E0E0"
+                  placeholder="Estimated Time.."
+                  value={newEstTime}
+                  onChange={(e) => setNewEstTime(e.target.value)}
+                />
+                {/* // Input for updating category */}
+                <Input
+                  variant="filled"
+                  bg="#E0E0E0"
+                  placeholder="Category.."
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                />
+                {/* // Input for updating location */}
+                <Input
+                  variant="filled"
+                  bg="#E0E0E0"
+                  placeholder="Location.."
+                  value={newLocation}
+                  onChange={(e) => setNewLocation(e.target.value)}
+                />
+                {/* // Input for updating notes */}
+              </Stack>
               <Input
                 variant="filled"
                 bg="#E0E0E0"
