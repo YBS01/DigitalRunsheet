@@ -469,7 +469,7 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
             borderRadius="lg"
             overflowY="hidden"
           >
-            <Table>
+            {/* <Table variant="simple" >
               <Thead>
                 <Tr>
                   <Th>#</Th>
@@ -479,7 +479,7 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
                   <Th>Notes</Th>
                 </Tr>
               </Thead>
-            </Table>
+            </Table> */}
             {loading ? (
               <Spinner
                 size="xl"
@@ -503,7 +503,7 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
                   <Tbody>
                     {/* Render cues as rows */}
                     {messages.map((message, index) => (
-                      <Tr
+                      <Tr 
                         key={index}
                         onClick={() => handleCueClick(message)}
                         style={{
@@ -516,6 +516,14 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
                               : message.status === "completed"
                               ? "gray"
                               : "white",
+                          color:
+                            message.status === "live"
+                              ? "white"
+                              : message.status === "standby"
+                              ? "white"
+                              : message.status === "completed"
+                              ? "white"
+                              : "black",
                         }}
                       >
                         {/* <Td>{message.sender.name}</Td> */}
