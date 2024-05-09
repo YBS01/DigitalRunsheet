@@ -621,24 +621,26 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
                 />
                 {/* // Input for updating notes */}
               </Stack>
-              <Input
-                variant="filled"
-                bg="#E0E0E0"
-                placeholder="Enter notes.."
-                value={newNotes}
-                onChange={(e) => setNewNotes(e.target.value)}
-              />
-              {/* // Input for updating content
+              <Stack direction="row" spacing={4} mt={3}>
+                <Input
+                  variant="filled"
+                  bg="#E0E0E0"
+                  placeholder="Enter notes.."
+                  value={newNotes}
+                  onChange={(e) => setNewNotes(e.target.value)}
+                />
+                {/* // Input for updating content
               <Input variant="filled" bg="#E0E0E0" placeholder="Enter content.." value={newContent} onChange={(e) => setNewContent(e.target.value)} /> */}
-              <Button
-                colorScheme="blue"
-                mt={{ base: 3, md: 0 }}
-                ml={{ base: 0, md: 3 }}
-                onClick={addCue}
-              >
-                Add Cue
-              </Button>{" "}
-              {/* Add Cue button */}
+                <Button
+                  colorScheme="blue"
+                  mt={{ base: 3, md: 0 }}
+                  ml={{ base: 0, md: 3 }}
+                  onClick={addCue}
+                >
+                  Add Cue
+                </Button>{" "}
+                {/* Add Cue button */}
+              </Stack>
             </FormControl>
           </Box>
         </>
