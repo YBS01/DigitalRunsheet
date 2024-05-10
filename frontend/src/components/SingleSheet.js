@@ -589,6 +589,7 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
                         setNewItemNum(value);
                       }
                     }}
+                    placeholder="#"
                   />
                   <NumberInputStepper>
                     <NumberIncrementStepper />
